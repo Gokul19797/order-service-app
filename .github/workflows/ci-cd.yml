@@ -37,8 +37,8 @@ jobs:
         with:
           image: gokulkrishnanm97/order-service:${{ env.TAG }}  # Dynamic image name with tag
           registry: docker.io  # Docker Hub registry
-          username: Gokul@19797  # Docker Hub username
-          password: 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
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       # Step 7: Set up kubectl to interact with your Minikube cluster
       - name: Set up kubectl
