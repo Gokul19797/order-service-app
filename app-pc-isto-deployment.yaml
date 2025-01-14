@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service-deployment
+  namespace: default # Optional as default namespace is used
+spec:
+  selector:
+    matchLabels:
+      app: product-service
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: product-service
+    spec:
+      containers:
+        - name: product-service
+          image: gokulkrishnanm97/product-service-0.0.1:v1
+          ports:
+            - containerPort: 8083
+          env:
+            - name: DB_HOST
+              value: mysql
+            - name: DB_NAME
+              value: product_service
+            - name: DB_USERNAME
+              value: root
+            - name: DB_PASSWORD
+              value: password
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8083
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8083
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-service-svc
+  namespace: default # Optional as default namespace is used
+spec:
+  selector:
+    app: product-service
+  ports:
+    - protocol: "TCP"
+      port: 8083
+      targetPort: 8083
+  type: ClusterIP
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: product-service
+  namespace: default # Optional as default namespace is used
+spec:
+  hosts:
+    - product-service-svc
+  http:
+    - route:
+        - destination:
+            host: product-service-svc
+            port:
+              number: 8083
+

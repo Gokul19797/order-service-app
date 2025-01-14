@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: consul
+  namespace: consul
+spec:
+  serviceName: "consul"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: consul
+  template:
+    metadata:
+      labels:
+        app: consul
+    spec:  # This was missing in your original YAML
+      containers:
+        - name: consul
+          image: hashicorp/consul:latest
+          command:
+            - "consul"
+            - "agent"
+            - "-server"
+            - "-bootstrap-expect=1"
+            - "-ui"
+            - "-client=0.0.0.0"
+            - "-bind=0.0.0.0"
+            - "-data-dir=/consul/data"
+          volumeMounts:
+            - name: consul-data
+              mountPath: /consul/data
+      volumes:
+        - name: consul-data
+          emptyDir: {}
+

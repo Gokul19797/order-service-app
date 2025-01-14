@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service-deployment
+spec:
+  selector:
+    matchLabels:
+      app: order-service-mysql
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: order-service-mysql
+      annotations: # Enable Consul Connect and provide configuration
+#        consul.hashicorp.com/connect-inject: "true" # Automatically inject Consul sidecar
+#        consul.hashicorp.com/connect-service: "true" # Enable service mesh for this service
+        consul.hashicorp.com/connect-service-upstream: 'product-service:3550' # Consul service name
+    spec:
+      containers:
+        - name: order-service
+          image: gokulkrishnanm97/order-service-0.0.1:v4
+          ports:
+            - containerPort: 8082
+          env:   # Setting Enviornmental Variables
+            - name: DB_HOST   # Setting Database host address from configMap
+              value: mysql
+            - name: PRODUCT_SERVICE
+              value: "localhost:3550"
+#              valueFrom :
+#                configMapKeyRef :
+#                  name : db-config
+#                  key :  host
+
+            - name: DB_NAME  # Setting Database name from configMap
+              value: order_service
+#              valueFrom :
+#                configMapKeyRef :
+#                  name : db-config
+#                  key :  dbName
+
+            - name: DB_USERNAME  # Setting Database username from Secret
+              value: root
+#              valueFrom :
+#                secretKeyRef :
+#                  name : mysql-secrets
+#                  key :  username
+
+            - name: DB_PASSWORD # Setting Database password from Secret
+              value: password
+#              valueFrom :
+#                secretKeyRef :
+#                  name : mysql-secrets
+#                  key :  password
+          livenessProbe:
+            httpGet:
+              path: /actuator/health # Spring Boot Actuator health endpoint
+              port: 8082
+            initialDelaySeconds: 10 # Time to wait before starting liveness checks
+            periodSeconds: 15 # Check every 15 seconds
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8082
+            initialDelaySeconds: 5 # Time to wait before starting readiness checks
+            periodSeconds: 10 # Check every 10 seconds
+---
+
+apiVersion: v1 # Kubernetes API version
+kind: Service # Kubernetes resource kind we are creating
+metadata: # Metadata of the resource kind we are creating
+  name: order-service-svc
+spec:
+  selector:
+    app: order-service-mysql
+  ports:
+    - protocol: "TCP"
+      port: 8082 # The port that the service is running on in the cluster
+      targetPort: 8082 # The port exposed by the service
+  type: ClusterIP # type of the service.

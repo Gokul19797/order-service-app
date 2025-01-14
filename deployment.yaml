@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service-deployment
+  namespace: default # This can be omitted as 'default' is used by default
+spec:
+  selector:
+    matchLabels:
+      app: order-service
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: order-service
+    spec:
+      containers:
+        - name: order-service
+          image: gokulkrishnanm97/order-service-0.0.1:v3
+          ports:
+            - containerPort: 8082
+          env:
+            - name: DB_HOST
+              value: mysql
+            - name: PRODUCT_SERVICE
+              value: "http://product-service:8080"
+            - name: DB_NAME
+              value: order_service
+            - name: DB_USERNAME
+              value: root
+            - name: DB_PASSWORD
+              value: password
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8082
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8082
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service-svc
+  namespace: default # This can be omitted as 'default' is used by default
+spec:
+  selector:
+    app: order-service
+  ports:
+    - protocol: "TCP"
+      port: 8082
+      targetPort: 8082
+  type: ClusterIP
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: order-service
+  namespace: default # This can be omitted as 'default' is used by default
+spec:
+  hosts:
+    - order-service-svc
+  http:
+    - route:
+        - destination:
+            host: order-service-svc
+            port:
+              number: 8082
