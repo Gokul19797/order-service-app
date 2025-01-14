@@ -19,6 +19,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '21'
+          distribution: 'openjdk'
 
       # Step 3: Build the application using Maven
       - name: Build with Maven
