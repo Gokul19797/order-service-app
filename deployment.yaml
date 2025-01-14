@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: order-service
-          image: gokulkrishnanm97/order-service-0.0.1:v3
+          image: gokulkrishnanm97/order-service:v3
           ports:
             - containerPort: 8082
           env:
