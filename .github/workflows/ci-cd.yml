@@ -32,29 +32,21 @@ jobs:
           echo "TAG=$(date +%Y%m%d%H%M%S)-${{ github.sha }}" >> $GITHUB_ENV
 
       # Step 5: Build Docker image
-      - name: Build Docker image
-        run: |
-          docker build -t gokulkrishnanm97/order-service:${{ env.TAG }} .
-
-      # Step 6: Log in to Docker Hub
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        env:
-          username: ${{ secrets.DOCKER_USERNAME }}
+      - name: Build and push Docker image to Docker Hub
+        uses: mr-smithers-excellent/docker-build-push@v6
+        with:
+          image: gokulkrishnanm97/order-service:${{ env.TAG }}  # Dynamic image name with tag
+          registry: docker.io  # Docker Hub registry
+          username: ${{ secrets.DOCKER_USERNAME }}  # Docker Hub username
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Step 7: Push Docker image to Docker Hub
-      - name: Push Docker image
-        run: |
-          docker push gokulkrishnanm97/order-service:${{ env.TAG }}
-
-      # Step 8: Set up kubectl to interact with your Minikube cluster
+      # Step 7: Set up kubectl to interact with your Minikube cluster
       - name: Set up kubectl
         run: |
           mkdir -p ~/.kube
           echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
 
-      # Step 9: Automatically update Kubernetes deployment with new image tag
+      # Step 8: Automatically update Kubernetes deployment with new image tag
       - name: Update Kubernetes deployment with new image
         run: |
           # Replace the image tag in deployment.yaml with the new tag
