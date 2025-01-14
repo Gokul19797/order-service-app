@@ -51,7 +51,7 @@ jobs:
       - name: Update Kubernetes deployment with new image
         run: |
           # Replace the image tag in deployment.yaml with the new tag
-          sed -i "s|gokulkrishnanm97/order-service:.*|gokulkrishnanm97/order-service:${{ env.TAG }}|" k8s/deployment.yaml
+          sed -i "s|gokulkrishnanm97/order-service:.*|gokulkrishnanm97/order-service:${{ env.TAG }}|" deployment.yaml
           
           # Apply the updated deployment and service to Kubernetes
           kubectl apply -f deployment.yaml
